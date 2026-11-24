@@ -214,7 +214,8 @@ details[open] summary::after{content:"－"}
   <section id="onboard" class="screen">
     <h1>はじめまして。<br>あなたのことを教えてください。</h1>
     <p class="lead">名前と生年月日から、世界中の占いを一度に計算します。<br>入力した内容はこの端末にだけ保存されます。</p>
-    <div class="field"><label>おなまえ</label><input id="inName" maxlength="20" placeholder="やぴ" autocomplete="nickname"></div>
+    <div class="field"><label>表示名（画面に出る名前）</label><input id="inNick" maxlength="12" placeholder="ニックネーム" autocomplete="off"><p class="lead" style="margin-top:6px;font-size:11px">スクショに映る名前です。本名でなくてOK。占いの計算には使いません。</p></div>
+    <div class="field"><label>おなまえ（占いの計算用・画面には出ません）</label><input id="inName" maxlength="20" placeholder="やぴ" autocomplete="nickname"></div>
     <div class="field"><label>よみがな（ひらがな）</label><input id="inKana" maxlength="30" placeholder="やぴ"></div>
     <div class="field"><label>生年月日</label><input id="inBirth" type="date" min="1900-01-01" max="2099-12-31"></div>
     <div class="field"><label>性別</label><div class="seg" id="inGender"><button data-v="f">女性</button><button data-v="m">男性</button><button data-v="x">そのほか</button><button data-v="n">答えない</button></div></div>
@@ -966,30 +967,32 @@ function evaluate(profile,today,table,opt={}){
 /* ========== 画面 ========== */
 const today=todayYMD(),TKEY=keyOf(today);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
-function refreshChip(){const b=$('#profileBtn');if(db.profile){b.hidden=false;b.textContent=db.profile.name+' さん ✎'}else b.hidden=true}
+function refreshChip(){const b=$('#profileBtn');if(db.profile){b.hidden=false;b.textContent=(db.profile.nick||'あなた')+' さん ✎'}else b.hidden=true}
 
 function openOnboard(edit){
   show('onboard');$('#err').textContent='';
   $('#cancelBtn').hidden=!edit;$('#wipeBtn').hidden=!edit;
-  if(!edit){$('#inName').value='';$('#inKana').value='';$('#inBirth').value='';setGender('')}$('#saveBtn').textContent=edit?'保存する':'はじめる';
-  if(edit&&db.profile){$('#inName').value=db.profile.name;$('#inKana').value=db.profile.kana;$('#inBirth').value=db.profile.birthStr;setGender(db.profile.gender)}
-  if(db.profile&&!db.profile.gender)$('#err').textContent='性別の項目が増えました。選んで保存してください';
+  if(!edit){$('#inNick').value='';$('#inName').value='';$('#inKana').value='';$('#inBirth').value='';setGender('')}$('#saveBtn').textContent=edit?'保存する':'はじめる';
+  if(edit&&db.profile){$('#inNick').value=db.profile.nick||'';$('#inName').value=db.profile.name;$('#inKana').value=db.profile.kana;$('#inBirth').value=db.profile.birthStr;setGender(db.profile.gender)}
+  if(db.profile&&!db.profile.nick)$('#err').textContent='画面に出る名前（表示名）を決めてください。スクショに本名が映らなくなります';
+  else if(db.profile&&!db.profile.gender)$('#err').textContent='性別の項目が増えました。選んで保存してください';
 }
 let GENDER='';
 function setGender(v){GENDER=v||'';[...$('#inGender').children].forEach(b=>b.classList.toggle('on',b.dataset.v===GENDER))}
 $('#inGender').onclick=e=>{const b=e.target.closest('button');if(b)setGender(b.dataset.v)};
 $('#saveBtn').onclick=()=>{
-  const name=$('#inName').value.trim(),kana=toHira($('#inKana').value.trim()),b=$('#inBirth').value;
+  const nick=$('#inNick').value.trim(),name=$('#inName').value.trim(),kana=toHira($('#inKana').value.trim()),b=$('#inBirth').value;
+  if(!nick)return $('#err').textContent='表示名を入れてください（ニックネームでOK）';
   if(!name)return $('#err').textContent='おなまえを入れてください';
   if(!kana||!kanaNum(kana))return $('#err').textContent='よみがなをひらがなで入れてください';
   if(!/^\d{4}-\d{2}-\d{2}$/.test(b))return $('#err').textContent='生年月日を入れてください';
   if(jdn(parseYMD(b))>jdn(today))return $('#err').textContent='未来の日付は選べません';
   if(!GENDER)return $('#err').textContent='性別を選んでください（答えないも選べます）';
-  db.profile={name,kana,birthStr:b,gender:GENDER};persist();refreshChip();route();
+  db.profile={nick,name,kana,birthStr:b,gender:GENDER};persist();refreshChip();route();
 };
 $('#cancelBtn').onclick=()=>route();
 $('#toTopBtn').onclick=()=>showHome();
-$('.brand').onclick=()=>{if(db.profile&&db.profile.gender)showHome()};
+$('.brand').onclick=()=>{if(db.profile&&db.profile.gender&&db.profile.nick)showHome()};
 $('#profileBtn').onclick=()=>openOnboard(true);
 
 function keyAtJ(j){const d=new Date((j-2440588)*864e5);return keyOf({y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate()})}
@@ -999,13 +1002,13 @@ function profileObj(){const p=db.profile;return{...p,birth:parseYMD(p.birthStr)}
 function route(){
   refreshChip();
   if(!db.profile)return openOnboard(false);
-  if(!db.profile.gender)return openOnboard(true);
+  if(!db.profile.gender||!db.profile.nick)return openOnboard(true);
   if(db.draws[TKEY])return renderResult(false);
   showHome();
 }
 function showHome(){
   const drawn=!!db.draws[TKEY];show('home');window.scrollTo(0,0);
-  $('#homeDate').textContent=fmtDate(today);$('#homeName').textContent=db.profile.name;
+  $('#homeDate').textContent=fmtDate(today);$('#homeName').textContent=db.profile.nick||'あなた';
   $('#fCount').textContent=FORTUNES.length;
   $('#drawBtn').textContent=drawn?'今日の結果を見る':'占う';
   {const st=streak();$('#homeStreak').textContent=drawn?`今日はもう占いました（${st}日連続）。明日また新しい運勢が届きます`:st>0?`昨日まで ${st}日連続で占っています。今日も続けよう`:''}
