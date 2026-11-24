@@ -1286,7 +1286,10 @@ const POKER_TOT=2598960;
 const MGAME={god:'神スロ',lotto:'宝くじ',card:'伏せカード'};
 function rand53(){const a=new Uint32Array(2);crypto.getRandomValues(a);return(a[0]*2097152+(a[1]>>>11))/9007199254740992}
 // 上位p（小さいほど珍しい）→ 点数。占い1個ぶんの点（30〜100）にそろえる
-const mScore=p=>Math.round((100-70*Math.sqrt(Math.min(1,p)))*10)/10;
+// ゲームごとの点数の曲線 [最低点, 最高点, 曲がり具合]。階級は運の珍しさ(上位%)で決まり、点数だけがゲームごとに違う
+const MCURVE={god:[38,76,.5],lotto:[30,100,.32],card:[34,95,.4]};
+const MTYPE={god:'安定型',lotto:'一撃型',card:'中間型'};
+const mScore=(p,t)=>{const[lo,hi,a]=MCURVE[t];return Math.round((lo+(hi-lo)*(1-Math.pow(Math.min(1,Math.max(0,p)),a)))*10)/10};
 function fmtYen(y){
   if(y>=1e12)return'約'+(+(y/1e12).toPrecision(3))+'兆円';
   if(y>=1e8)return'約'+(+(y/1e8).toPrecision(3))+'億円';
@@ -1316,7 +1319,7 @@ function shuffle52(){const a=[...Array(52).keys()];for(let i=51;i>0;i--){const j
 
 // 結果をつくる（p＝その結果かそれ以上が出る確率、q＝その結果かそれ以下が出る確率）
 function mkMoment(t,x){
-  let p,q,r,h,b,one=false;
+  let p,q,r,h,b,one=false,pm=null;
   if(t==='god'){
     const n=x.n;p=godF(n);q=godQ(n);one=n===2;
     r=`GOD揃いを2回引くまで ${n.toLocaleString()}G`;
@@ -1330,10 +1333,10 @@ function mkMoment(t,x){
   }else{
     const hand=x.hand,i=pokerRank(hand);
     let up=0,lo=0;POKER.forEach(([,c],k)=>{if(k<=i)up+=c;if(k>=i)lo+=c});
-    p=up/POKER_TOT;q=lo/POKER_TOT;one=i===0;
+    p=up/POKER_TOT;q=lo/POKER_TOT;pm=(up-POKER[i][1]/2)/POKER_TOT;one=i===0;
     r=POKER[i][0];h=hand.map(cardTxt).join('　');b=`5枚の役。この役かそれ以上が出る確率は ${fmtP(p)}`;
   }
-  return{t,p,q,g:grade(p,q),s:mScore(p),r,h,b,one,n:x.n,hand:x.hand};
+  return{t,p,q,g:grade(p,q),s:mScore(pm==null?p:pm,t),r,h,b,one,n:x.n,hand:x.hand};
 }
 // キープを反映した総合。土台の中で点の低い占いから順に、キープした結果と入れ替える（高い結果＝低い占い の組み合わせ）
 function calcFinal(rows,keptScores){
@@ -1361,7 +1364,7 @@ const mpv=m=>pv(m.p,m.q,m.g);
 
 function momentCardHTML(){
   const ms=todayMoments(),k=keepCount(),pend=pendingM();
-  const list=ms.map(m=>`<div class="mli"><span class="tag${m.kept?' k':''}">${m.kept?'キープ':'見送り'}</span><div>${MGAME[m.t]}　${esc(m.r)}${m.one?' ★一発引き':''}<small>${esc(m.t==='card'?m.h:m.h)}</small></div><b class="grade g-${m.g}">${m.g}</b></div>`).join('');
+  const list=ms.map(m=>`<div class="mli"><span class="tag${m.kept?' k':''}">${m.kept?'キープ':'見送り'}</span><div>${MGAME[m.t]}　${esc(m.r)}${m.one?' ★一発引き':''}<small>${esc(m.t==='card'?m.h:m.h)}</small></div><b class="grade g-${m.g}">${m.g}<small style="display:block;font-size:10px;color:var(--mute);letter-spacing:0;text-align:right">${m.s.toFixed(0)}点</small></b></div>`).join('');
   return`<div class="mcard"><div class="mc-h"><b>瞬間占い</b><span>キープ <b>${k}</b> / ${MAX_KEEP}</span></div>
     <div class="mc-note">いまこの瞬間の運を、文字のミニゲームで占います。良い結果は、キープすると今日の運勢の悪かった占いと入れ替わります。</div>
     ${ms.length?`<div class="mlist">${list}</div>`:''}
@@ -1398,9 +1401,9 @@ function renderMenu(el){
     <div class="mc-h"><span>今日のキープ</span><span><b>${k}</b> / ${MAX_KEEP}</span></div>
     <p class="lead">1時間ごとに1回、占えます。結果を見てから「キープ」か「見送り」を選びます。キープは${MAX_KEEP}つまで、入れ替えはできません。中吉くらいで枠を使うか、もっと良いものを待つか。</p>
     <div class="mc-note mcd" style="font-size:14px;color:var(--gold)"></div>
-    <button class="mgame" data-t="god" ${left?'disabled':''}><b>神スロ</b><small>GOD揃い（1/16384）を2回引くまで何Gかかるか。少ないほど幸運。1Gで連続2回なら最上輪廻級。</small></button>
-    <button class="mgame" data-t="lotto" ${left?'disabled':''}><b>宝くじ</b><small>1等（約2000万分の1）が当たるまで何枚買うか。総投資と収支つき。1枚目で当たれば天上天下。</small></button>
-    <button class="mgame" data-t="card" ${left?'disabled':''}><b>伏せカード</b><small>伏せた52枚から直感で5枚を選び、ポーカーの役を見る。ロイヤルストレートフラッシュは約65万分の1。</small></button>
+    <button class="mgame" data-t="god" ${left?'disabled':''}><b>神スロ</b><small>【安定型・毎回そこそこ／上限76点】GOD揃い（1/16384）を2回引くまで何Gかかるか。少ないほど幸運。1Gで連続2回なら最上輪廻級。</small></button>
+    <button class="mgame" data-t="lotto" ${left?'disabled':''}><b>宝くじ</b><small>【一撃型・ほぼハズレ／当たれば最大100点】1等（約2000万分の1）が当たるまで何枚買うか。総投資と収支つき。1枚目で当たれば天上天下。</small></button>
+    <button class="mgame" data-t="card" ${left?'disabled':''}><b>伏せカード</b><small>【中間型・ほどほど／最大95点】伏せた52枚から直感で5枚を選び、ポーカーの役を見る。ロイヤルストレートフラッシュは約65万分の1。</small></button>
     ${ms.length?`<div class="mlist" style="margin-top:16px">${ms.map(m=>`<div class="mli"><span class="tag${m.kept?' k':''}">${m.kept?'キープ':'見送り'}</span><div>${MGAME[m.t]}　${esc(m.r)}${m.one?' ★一発引き':''}</div><b class="grade g-${m.g}">${m.g}</b></div>`).join('')}</div>`:''}
     <button class="btn ghost" id="momentBack">結果にもどる</button>`;
   tickMoment();
@@ -1433,7 +1436,7 @@ function previewHTML(res){
   const f=calcFinal(ev.rows,[...kept.map(x=>x.s),res.s]),nx=pv(f.up,f.lo,f.g);
   const worst=[...ev.rows].sort((a,b)=>a.r.s-b.r.s)[kept.length];
   const same=Math.round(f.up*1e12)===Math.round(ev.totalPct*1e12)&&Math.round(f.lo*1e12)===Math.round(ev.totalLo*1e12);
-  return`<div class="mprev">この結果は <b>${res.s.toFixed(1)}点</b>。
+  return`<div class="mprev">この結果は <b>${res.s.toFixed(1)}点</b>（${MTYPE[res.t]}）。
     ${same?`いま${kept.length+1}番目に低い「${worst.f.name}」（${worst.r.s.toFixed(1)}点）より低いので、キープしても総合は変わりません。`
     :`キープすると、${kept.length?'次に':''}いちばん低い「${worst.f.name}」（${worst.r.s.toFixed(1)}点）と入れ替わります。<br>総合 <span class="arrow">${ev.tg}（${cur.lab}${cur.val}）→ <b>${f.g}（${nx.lab}${nx.val}）</b></span>`}</div>`;
 }
@@ -1443,7 +1446,7 @@ function renderDecide(el,m){
   const longCls=res.g.length>=6?' gl':'';
   el.innerHTML=`<div class="mres"><div class="gname">${MGAME[res.t]}</div>
     <div class="grade g-${res.g}${longCls}" id="mGrade">${animate?'…':res.g}</div>
-    <div class="mpct">${v.lab}<b>${v.val}</b></div>
+    <div class="mpct">${v.lab}<b>${v.val}</b><span style="margin-left:10px">＋<b>${res.s.toFixed(1)}</b>点</span></div>
     <div class="mr" id="mrText">${esc(res.r)}</div>
     ${res.t==='card'?`<div class="hand">${res.hand.map(c=>`<span class="${cardRed(c)?'r':''}">${cardTxt(c)}</span>`).join('')}</div>`:`<div class="mh">${esc(res.h)}</div>`}
     <div class="mh">${esc(res.b)}</div>
