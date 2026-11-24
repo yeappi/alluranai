@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d0b1a">
 <title>せかい占い — 今日のいちばん</title>
-<meta name="description" content="世界の15の占いを一度に占って、今日いちばん良かった3つを見せる占い。">
+<meta name="description" content="世界のたくさんの占いを一度に占って、今日いちばん良かった3つを見せる占い。">
 <meta property="og:title" content="せかい占い — 今日のいちばん">
-<meta property="og:description" content="世界の15の占いを一度に占って、今日いちばん良かった3つを見せる占い。">
+<meta property="og:description" content="世界のたくさんの占いを一度に占って、今日いちばん良かった3つを見せる占い。">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23171331'/%3E%3Cpath d='M40 14a18 18 0 1 0 0 36 22 22 0 0 1 0-36z' fill='%23e8c872'/%3E%3C/svg%3E">
 <style>
@@ -89,6 +89,10 @@ h1{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.5;lette
 .r1 .grade{font-size:42px}
 .g-超大吉{background:linear-gradient(90deg,#ffe6a0,#ff9ec7,#a9d8ff,#ffe6a0);background-size:300%;-webkit-background-clip:text;background-clip:text;animation:rainbow 4s linear infinite}
 @keyframes rainbow{to{background-position:300%}}
+.g-神級最上大吉{background:linear-gradient(90deg,#ffffff,#ffe27a,#ff7ad9,#7ad9ff,#ffffff);background-size:300%;-webkit-background-clip:text;background-clip:text;animation:rainbow 2s linear infinite;filter:drop-shadow(0 0 10px rgba(255,230,160,.85))}
+.g-伝説大吉{background:linear-gradient(90deg,#fff3c4,#ff9ec7,#fff3c4,#ffd36b);background-size:300%;-webkit-background-clip:text;background-clip:text;animation:rainbow 3s linear infinite;filter:drop-shadow(0 0 6px rgba(255,200,160,.6))}
+.g-極大吉{background:linear-gradient(90deg,#ffe6a0,#ffb36b,#ff9ec7,#ffe6a0);background-size:300%;-webkit-background-clip:text;background-clip:text;animation:rainbow 4s linear infinite}
+.g-特大吉{background:linear-gradient(180deg,#fff0b8,#f0a93a);-webkit-background-clip:text;background-clip:text}
 .res{font-size:14px;margin-top:6px;line-height:1.6;word-break:break-word}
 .msg{font-size:13px;color:var(--mute);margin-top:6px;line-height:1.7}
 .pct{position:absolute;right:16px;top:16px;text-align:right;font-size:11px;color:var(--mute)}
@@ -148,7 +152,7 @@ details[open] summary::after{content:"－"}
 .sh-res{display:flex;align-items:baseline;gap:10px}
 .sh-pct{font-size:12px;color:var(--mute)}
 .sh-how{font-size:12px;color:var(--mute);line-height:1.8;font-family:var(--sans)}
-.gb-row{display:grid;grid-template-columns:52px 1fr 44px;gap:8px;align-items:center;font-size:12px;color:var(--dim);padding:3px 0}
+.gb-row{display:grid;grid-template-columns:84px 1fr 48px;gap:8px;align-items:center;font-size:12px;color:var(--dim);padding:3px 0}
 .gb-row i{height:8px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden}
 .gb-row em{display:block;height:100%;background:var(--dim);border-radius:8px}
 .gb-row b{font-weight:500;text-align:right}
@@ -169,6 +173,31 @@ details[open] summary::after{content:"－"}
 .cats b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-top:3px}
 .cats s{text-decoration:none;color:rgba(255,255,255,.15)}
 .cats small{display:block;font-size:10px;color:var(--dim);margin-top:2px}
+/* calendar */
+.calNav{display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px}
+.calNav b{font-family:var(--serif);font-size:17px;letter-spacing:.1em;font-weight:600}
+.calNav button{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;color:var(--gold);font-size:18px}
+.calNav button:disabled{opacity:.2;cursor:default}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calGrid .wd{font-size:10px;color:var(--dim);text-align:center;padding:2px 0}
+.cd{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--mute);position:relative;line-height:1.2}
+.cd.blank{background:none}
+.cd.has{cursor:pointer;font-weight:700}
+.cd.has:active{opacity:.75}
+.cd.today{outline:1.5px solid var(--gold);outline-offset:1px}
+.cd.future{opacity:.3}
+.cd.best::after{content:"★";position:absolute;top:1px;right:3px;font-size:10px}
+.cd small{font-size:8px;font-weight:600;margin-top:1px;opacity:.8;letter-spacing:0}
+.calSum{font-size:12px;color:var(--mute);line-height:1.8;text-align:center;margin-top:12px}
+.calSum b{color:var(--gold);font-weight:600}
+.calLegend{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;margin-top:12px;font-size:10px;color:var(--dim)}
+.calLegend span{display:inline-flex;align-items:center;gap:4px}
+.calLegend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.calOpen{display:block;margin:10px auto 0;font-size:12px;color:var(--gold)}
+.dayTop{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px}
+.dayTop:first-child{border-top:0}
+.dayTop .nm{flex:1}.dayTop .nm small{display:block;color:var(--mute);font-size:11px}
+.dayTop b{font-family:var(--serif)}
 .linkBtn{display:block;margin:22px auto 0;font-size:12px;color:var(--dim);text-decoration:underline}
 .foot{text-align:center;color:var(--dim);font-size:11px;margin-top:22px;line-height:1.8}
 </style>
@@ -203,9 +232,20 @@ details[open] summary::after{content:"－"}
     <div class="count">世界の <b id="fCount"></b> の占いを、一度にまとめて占います</div>
     <div class="tags" id="tags"></div>
     <button class="btn" id="drawBtn">占う</button>
+    <button class="btn ghost" id="calBtnH" style="margin-top:12px">運勢カレンダーを見る</button>
     <p class="foot" id="homeStreak"></p>
     <p class="foot">1日1回。結果は今日の終わりまで変わりません。</p>
     <button class="linkBtn" id="resetLinkH">リセット</button>
+  </section>
+
+  <!-- カレンダー -->
+  <section id="cal" class="screen">
+    <div class="secT">運勢カレンダー</div>
+    <div class="calNav"><button id="calPrev" aria-label="前の月">‹</button><b id="calTitle"></b><button id="calNext" aria-label="次の月">›</button></div>
+    <div id="calBox"></div>
+    <div class="calSum" id="calSum"></div>
+    <div class="calLegend" id="calLegend"></div>
+    <button class="btn ghost" id="calBack">もどる</button>
   </section>
 
   <!-- 結果 -->
@@ -214,7 +254,10 @@ details[open] summary::after{content:"－"}
     <div class="secT">今日のいちばん</div>
     <div id="top3"></div>
     <div class="total" id="total"></div>
-    <button class="btn" id="shareBtn" style="margin-top:0">結果を画像でシェア</button>
+    <div class="secT" style="margin-top:26px">今月の運勢カレンダー</div>
+    <div id="miniCal"></div>
+    <button class="calOpen" id="calOpenR">月ごとにくわしく見る ›</button>
+    <button class="btn" id="shareBtn" style="margin-top:18px">結果を画像でシェア</button>
     <details id="allBox"><summary>すべての占い結果（タップで詳しく）</summary><div class="list" id="allList"></div></details>
     <details id="howBox"><summary>しくみと乱数表</summary>
       <div class="how" id="howText"></div>
@@ -275,11 +318,14 @@ function mkDist(pairs){
 function topPct(dist,s){let r=1;for(const[sc,,c]of dist){if(sc>=s-1e-9)r=c;else break}return r}
 function sample(dist,u){let lo=0,hi=dist.length-1;while(lo<hi){const m=(lo+hi)>>1;if(u<=dist[m][2])hi=m;else lo=m+1}return dist[lo][0]}
 const uniform=(arr,f)=>mkDist(arr.map(x=>[f(x),1/arr.length]));
-const GRADES=['超大吉','大吉','中吉','吉','小吉','末吉'];
-function grade(p){return p<=.03?'超大吉':p<=.10?'大吉':p<=.25?'中吉':p<=.50?'吉':p<=.80?'小吉':'末吉'}
+const GRADES=['神級最上大吉','伝説大吉','極大吉','超大吉','特大吉','大吉','中吉','吉','小吉','末吉'];
+// 上位%の境目（数字は「その階級に入る上位何%以内か」）。浮動小数の誤差用に1e-9だけ余裕を持たせる
+const GRADE_CUT=[[.00001,'神級最上大吉'],[.0001,'伝説大吉'],[.001,'極大吉'],[.005,'超大吉'],[.03,'特大吉'],[.10,'大吉'],[.25,'中吉'],[.50,'吉'],[.80,'小吉']];
+function grade(p){for(const[c,g]of GRADE_CUT)if(p<=c+1e-9)return g;return'末吉'}
 // その占いの最高の結果が出たときは、確率に関係なく最低でも大吉にする（おみくじの大吉が中吉と表示されないように）
-function gradeOf(pct,s,dist){const g=grade(pct);return s>=dist[0][0]-1e-9&&GRADES.indexOf(g)>1?'大吉':g}
-const fmtPct=p=>{const v=p*100;return v<10?(Math.max(.1,v)).toFixed(1):String(Math.round(v))};
+const IDX_DAIKICHI=GRADES.indexOf('大吉');
+function gradeOf(pct,s,dist){const g=grade(pct);return s>=dist[0][0]-1e-9&&GRADES.indexOf(g)>IDX_DAIKICHI?'大吉':g}
+const fmtPct=p=>{const v=p*100;return v<.1?String(+v.toPrecision(2)):v<10?v.toFixed(1):String(Math.round(v))};
 
 /* ========== 乱数表 ==========
    1回の抽選＝00〜99の数字60マス。抽選型の占いはそれぞれ担当マス(重複あり)を読む */
@@ -426,6 +472,7 @@ const ABOUT={
  kyusei:'中国の九星を日本で体系化した占い。生まれ年の本命星と、今日の日の星（日盤）の五行の関係で運を見ます。',
  maya:'古代マヤの260日暦をもとにした、ドリームスペル式の占い。今日の太陽の紋章と、あなたの誕生日の紋章の関係を見ます。',
  moon:'西洋占星術の考え方で、今日の月がいる星座と、あなたの太陽星座の角度を見ます。月は約2.5日ごとに星座を移ります。',
+ number:'5桁の数字を引いて、ぞろ目・連番・同じ数字の組み合わせなどのそろい方で占います。ラッキー7が入るとプラス。77777が出る確率は10万分の1です。',
  kotodama:'日本の言霊の考え方にもとづく数の占い。よみがなを五十音の順番で数に変え、今日の日付の数との相性を見ます。'};
 const LUCKY_COLOR=['金色','白','水色','若草色','桜色','紺','オレンジ','ラベンダー','赤','ミントグリーン','ベージュ','銀色'];
 const LUCKY_ACT=['いつもと違う道を歩く','温かい飲み物をゆっくり飲む','机の上をひとつ片付ける','気になっていた人に連絡する','新しいお店に入ってみる','好きな曲を1曲フルで聴く','10分だけ早く寝る','窓を開けて空気を入れかえる','誰かを一言ほめる','やりたいことを3つ書き出す','甘いものを少しだけ食べる','靴をきれいにする','空の写真を撮る','ストレッチを1分する','財布の中を整理する','本を数ページ読む','「ありがとう」を声に出して言う','植物に水をあげる','笑える動画を1本見る','鏡の前で口角を上げる'];
@@ -466,6 +513,10 @@ const FORTUNES=[
    run(c){const b=[18,19,20,21,22,23].map(i=>c.t[i]%2?'1':'0');const lo=TRI[b.slice(0,3).join('')],up=TRI[b.slice(3).join('')];const n=KW[up][lo];const TN='乾兌離震巽坎艮坤';
      return{s:HEX_S[n-1],r:`第${n}卦 ${HEX[n-1]}`,h:`上に${TN[up]}、下に${TN[lo]}`,b:HEX_B[n-1],w:`${cellStr(c.t,[18,19,20,21,22,23])}（[18][19]はジオマンシーと共用）。奇数を陽、偶数を陰として下から6本積み、下3本が${TN[lo]}、上3本が${TN[up]}になりました。`}},
    dist(){return mkDist(HEX_S.map(s=>[s,1/64]))}},
+  {id:'number',name:'数字くじ占い',origin:'世界各地',kind:'draw',cells:[24,25,26,27,28],school:'5桁の数字・ぞろ目と連番',
+   run(c){const d=[24,25,26,27,28].map(i=>c.t[i]%10),r=numberScore(d);
+     return{s:r.s,r:d.join(''),h:r.h,b:r.b,w:`${cellStr(c.t,[24,25,26,27,28])}。それぞれの一の位（${d.join('、')}）を並べて5桁の数にしました。`}},
+   dist(){if(!NUMBER_DIST){const a=[];for(let n=0;n<100000;n++){const d=String(n).padStart(5,'0').split('').map(Number);a.push([numberScore(d).s,1e-5])}NUMBER_DIST=mkDist(a)}return NUMBER_DIST}},
 
   {id:'bio',name:'バイオリズム',origin:'ドイツ',kind:'calc',school:'身体23日・感情28日・知性33日',
    run(c){const d=jdn(c.today)-jdn(c.p.birth),v=bioV(d).map(x=>Math.round(x*100));const ar=x=>(x>=0?'+':'')+x;
@@ -499,6 +550,27 @@ const FORTUNES=[
      return{s:sc,r:`名前の数${me} × 今日の数${td} → ${l}`,h:`今日の数は${td}（${PD_K[td]}）`,b:KOTO_B[l],w:`「${esc(c.p.kana)}」を五十音の順番（あ=1、い=2…ん=46）で足して一桁にすると${me}。今日の日付の数字を全部足して一桁にすると${td}です。`}},
    dist(c){const me=kanaNum(c.p.kana);return uniform([1,2,3,4,5,6,7,8,9],n=>numRel(me,n)[1])}},
 ];
+let NUMBER_DIST=null;
+// 5桁の数字の「そろい方」で点数をつける。77777だけが100点（10万分の1）、ぞろ目は98点、連番は97点…と細かく階段をつくる
+function numberScore(d){
+  const cnt={};d.forEach(x=>cnt[x]=(cnt[x]||0)+1);
+  const g=Object.values(cnt).sort((a,b)=>b-a),n7=cnt[7]||0;
+  const asc=d.every((x,i)=>i===0||x===d[i-1]+1),desc=d.every((x,i)=>i===0||x===d[i-1]-1);
+  const seven=n7>0?`ラッキー7が${n7}つ入って、運にさらに勢いがつく。`:'';
+  if(g[0]===5)return d[0]===7
+    ?{s:100,h:'77777！10万分の1の並び',b:'ラッキー7が5つ全部そろう、10万分の1の並び。今日は何をしても運が味方についています。'}
+    :{s:98,h:'ぞろ目！めったに出ない並び',b:'5つの数字が全部同じ。めったに見られない並びです。今日は運を信じて動いて。'};
+  if(asc||desc)return{s:97,h:'連番！階段のような並び',b:'数字が階段のように並ぶ「連番」。物事が順調にステップアップしていく日。'};
+  let s,h,b;
+  if(g[0]===4){s=92;h='同じ数字が4つ';b='同じ数字が4つ集まる強い並び。思い切って一つのことに集中すると大きく動く日。'}
+  else if(g[0]===3&&g[1]===2){s=86;h='3つと2つの組み合わせ';b='3つと2つの「フルハウス」。支えてくれる人との縁が深まる日。'}
+  else if(g[0]===3){s=76;h='同じ数字が3つ';b='同じ数字が3つ。流れがひとつの方向にそろっていく日。'}
+  else if(g[0]===2&&g[1]===2){s=64;h='ペアが2組';b='ペアが2組。誰かと組んで動くと、思った以上にうまく進む日。'}
+  else if(g[0]===2){s=52;h='ペアがひとつ';b='ペアがひとつ。ささやかな縁やめぐりあわせが生まれる日。'}
+  else{s=40;h='ぜんぶちがう数字';b='全部ちがう数字。いろいろな可能性が開けている日。どれを選んでもいい。'}
+  s=Math.min(96,s+3*n7);
+  return{s,h,b:b+seven};
+}
 function diceScore(d){
   const sum=d[0]+d[1]+d[2];
   if(d[0]===d[1]&&d[1]===d[2])return{s:100,h:'ゾロ目！めったに出ない吉兆',b:'3つの目がそろう確率は36分の1。今日は運を信じて動いて。'};
@@ -863,18 +935,32 @@ function catLuck(rows){
     const st=best.pct<=.05?5:best.pct<=.15?4:best.pct<=.35?3:best.pct<=.6?2:1;return{c,best,st}});
 }
 
+/* ========== 総合の確率（畳み込み） ==========
+   各占いの点数分布（0.1点刻み）を順に畳み込み、「合計点が target 以上になる確率」を返す。
+   乱数でなく計算なので、0.001%のような極小の確率も誤差なく出せる。 */
+function sumTailPct(dists,targetInt){
+  let cur=new Float64Array(1);cur[0]=1;
+  for(const d of dists){
+    const outs=d.map(([sc,p])=>[Math.round(sc*10),p]);
+    const mx=Math.max(...outs.map(o=>o[0]));
+    const next=new Float64Array(cur.length+mx);
+    for(let i=0;i<cur.length;i++){const a=cur[i];if(!a)continue;for(const[v,p]of outs)next[i+v]+=a*p}
+    cur=next;
+  }
+  let t=0;for(let i=cur.length-1;i>=targetInt;i--)t+=cur[i];
+  return Math.min(1,Math.max(t,0));
+}
+
 /* ========== 抽選の評価 ========== */
 function evaluate(profile,today,table,opt={}){
   const c={p:profile,today,t:table};
   const rows=FORTUNES.map(f=>{const r=f.run(c),dist=f.dist(c),pct=topPct(dist,r.s);return{f,r,dist,pct,g:gradeOf(pct,r.s,dist)}});
   rows.sort((a,b)=>a.pct-b.pct||b.r.s-a.r.s);
   const dk=keyOf(today);assignFocus(rows,dk,profile.name);diversifyTop(rows);const avoid=new Set(opt.avoid||[]);rows.forEach(x=>x.rd=reading(x,profile,dk,avoid,opt.picks&&opt.picks[x.f.id]));
-  // 総合：全占いの点数合計が、ありうる日々の中で上位何%か（モンテカルロ）
+  // 総合：全占いの点数合計が、ありうる日々の中で上位何%か（各占いが独立と仮定し、分布を畳み込んで正確に出す）
   const total=rows.reduce((a,x)=>a+x.r.s,0);
-  const rnd=mulberry(table.reduce((a,x,i)=>a*31+x+i|0,7));
-  const N=20000;let ge=0;
-  for(let i=0;i<N;i++){let s=0;for(const x of rows)s+=sample(x.dist,rnd());if(s>=total-1e-9)ge++}
-  return{rows,total,totalPct:ge/N,good:rows.filter(x=>x.pct<=.10).length,cats:catLuck(rows)};
+  const totalPct=sumTailPct(rows.map(x=>x.dist),rows.reduce((a,x)=>a+Math.round(x.r.s*10),0));
+  return{rows,total,totalPct,good:rows.filter(x=>x.pct<=.10).length,cats:catLuck(rows)};
 }
 
 /* ========== 画面 ========== */
@@ -948,6 +1034,7 @@ function renderResult(animate){
   const avoid=[];for(const[k,v]of Object.entries(db.draws)){const diff=jdn(today)-jdn(parseYMD(k));if(diff>0&&diff<=14&&v.shown)avoid.push(...v.shown)}
   const ev=EV=evaluate(profileObj(),today,d.table,{avoid,picks:d.picks});
   if(!d.picks){d.picks=Object.fromEntries(ev.rows.map(x=>[x.f.id,x.rd.picks]));d.shown=shownKeys(ev.rows);persist()}
+  d.sum=makeSum(ev);persist();
   {const st=streak();$('#resDate').textContent=fmtDate(today)+(st>1?`　🔥${st}日連続`:'')}
   const top=ev.rows.slice(0,3);
   $('#top3').innerHTML=top.map((x,i)=>`
@@ -976,6 +1063,7 @@ function renderResult(animate){
       <div class="t">${x.f.name}　<b>${x.g}</b><small>${x.r.r}</small><div class="bar"><i style="width:${Math.max(3,(1-x.pct)*100)}%"></i></div></div>
       <div class="p">上位<b>${fmtPct(x.pct)}</b>%<span class="chev">›</span></div></div>`).join('');
   renderHow(d.table);
+  renderMini();
   // 3位→2位→1位の順に出す
   const cards=[...document.querySelectorAll('#top3 .card')],tot=$('#total');
   const delays=animate?[1.5,0.8,0.15]:[0,0,0];
@@ -1028,6 +1116,71 @@ $('#replayBtn').onclick=()=>{window.scrollTo(0,0);playOverlay(()=>renderResult(t
 if(DEV)$('#devBox').hidden=false;
 $('#redrawBtn').onclick=()=>{delete db.draws[TKEY];persist();window.scrollTo(0,0);route()};
 $('#wipeBtn').onclick=()=>{if(!confirm('名前・生年月日・これまでの結果をすべて消します。よろしいですか？'))return;try{localStorage.removeItem(STORE)}catch(e){}db={draws:{}};route()};
+
+/* ========== カレンダー ==========
+   その日の総合の結果（階級・上位%・top3）を、引いた日ごとに端末へ保存して並べる */
+const GRADE_STYLE={
+ '神級最上大吉':['linear-gradient(135deg,#ffffff,#ffe27a,#ff7ad9,#7ad9ff)','#1b1233'],
+ '伝説大吉':['linear-gradient(135deg,#fff3c4,#ff9ec7)','#1b1233'],
+ '極大吉':['linear-gradient(135deg,#ffe6a0,#ffb36b)','#1b1233'],
+ '超大吉':['linear-gradient(135deg,#ffd0e8,#a9d8ff)','#1b1233'],
+ '特大吉':['#f3c969','#1b1233'],'大吉':['#c9a64a','#1b1233'],'中吉':['#9a86d8','#1b1233'],
+ '吉':['#6f61ad','#ffffff'],'小吉':['#484079','#e8e3ff'],'末吉':['#2e2a55','#b9b3d9']};
+const SUM_V=1;
+function makeSum(ev){return{v:SUM_V,tp:ev.totalPct,g:grade(ev.totalPct),top:ev.rows.slice(0,3).map(x=>({n:x.f.name,g:x.g,p:x.pct,r:x.r.r}))}}
+// その日の要約。保存がなければ、保存してある乱数表から計算し直して保存する（名前・生年月日は今の設定で計算）
+function daySummary(k){
+  const d=db.draws[k];if(!d)return null;
+  if(d.sum&&d.sum.v===SUM_V)return d.sum;
+  if(!db.profile||!db.profile.gender)return null;
+  try{const ev=evaluate(profileObj(),parseYMD(k),d.table,{picks:d.picks,avoid:[]});d.sum=makeSum(ev);persist();return d.sum}catch(e){return null}
+}
+let CAL={y:today.y,m:today.m};
+const monthIdx=(y,m)=>y*12+m-1;
+function monthHTML(y,m){
+  const first=new Date(y,m-1,1).getDay(),len=new Date(y,m,0).getDate(),tj=jdn(today);
+  const sums={};let best=null,n=0;
+  for(let d=1;d<=len;d++){const k=`${y}-${pad(m)}-${pad(d)}`,sm=daySummary(k);if(sm){sums[d]=sm;n++;if(!best||sm.tp<sums[best].tp)best=d}}
+  let h=[...WEEK].map(w=>`<div class="wd">${w}</div>`).join('')+'<div class="cd blank"></div>'.repeat(first);
+  for(let d=1;d<=len;d++){
+    const k=`${y}-${pad(m)}-${pad(d)}`,sm=sums[d],fut=jdn({y,m,d})>tj,cls=['cd'];
+    if(fut)cls.push('future');if(y===today.y&&m===today.m&&d===today.d)cls.push('today');
+    if(sm){cls.push('has');if(d===best&&n>=2)cls.push('best');const st=GRADE_STYLE[sm.g];
+      h+=`<div class="${cls.join(' ')}" data-k="${k}" style="background:${st[0]};color:${st[1]}">${d}<small>上位${fmtPct(sm.tp)}%</small></div>`}
+    else h+=`<div class="${cls.join(' ')}">${d}</div>`;
+  }
+  return{html:`<div class="calGrid">${h}</div>`,n,best,sums};
+}
+function openDaySheet(k){
+  const sm=daySummary(k);if(!sm)return;const o=parseYMD(k),st=GRADE_STYLE[sm.g];
+  $('#sheetBody').innerHTML=`
+    <div class="sh-top"><span class="sh-kind">${fmtDate(o)}</span></div>
+    <div class="sh-box" style="margin-top:12px">
+      <div class="sh-lbl">この日の総合</div>
+      <div class="sh-res"><span class="grade g-${sm.g}" style="font-size:26px">${sm.g}</span><span class="sh-pct">上位 ${fmtPct(sm.tp)}%</span></div>
+    </div>
+    <div class="sh-lbl">この日のいちばん</div>
+    ${sm.top.map((t,i)=>`<div class="dayTop"><span class="sh-pct">${i+1}位</span><div class="nm">${esc(t.n)}<small>${esc(t.r)}</small></div><b class="grade g-${t.g}" style="font-size:15px;margin:0">${t.g}</b><span class="sh-pct">上位${fmtPct(t.p)}%</span></div>`).join('')}
+    <p class="sh-note">「上位◯%」は、その日の運がどれだけ珍しく良かったかを表します。小さいほど珍しい幸運です。</p>`;
+  $('#sheet').classList.add('on');$('#sheetPanel').scrollTop=0;
+}
+function renderCal(){
+  const r=monthHTML(CAL.y,CAL.m);
+  $('#calTitle').textContent=`${CAL.y}年${CAL.m}月`;
+  $('#calBox').innerHTML=r.html;
+  const cur=monthIdx(today.y,today.m);
+  $('#calNext').disabled=monthIdx(CAL.y,CAL.m)>=cur;
+  $('#calPrev').disabled=monthIdx(CAL.y,CAL.m)<=cur-36;
+  $('#calSum').innerHTML=r.n?`この月は <b>${r.n}日</b> 占いました。`+(r.n>=2?`いちばん良かった日は <b>${CAL.m}月${r.best}日</b>（${r.sums[r.best].g}・上位${fmtPct(r.sums[r.best].tp)}%）★`:''):'この月の記録はまだありません。';
+}
+function renderMini(){const r=monthHTML(today.y,today.m);$('#miniCal').innerHTML=r.html}
+function openCal(){CAL={y:today.y,m:today.m};show('cal');window.scrollTo(0,0);renderCal()}
+$('#calLegend').innerHTML=GRADES.map(g=>`<span><i style="background:${GRADE_STYLE[g][0]}"></i>${g}</span>`).join('');
+$('#calPrev').onclick=()=>{const i=monthIdx(CAL.y,CAL.m)-1;CAL={y:Math.floor(i/12),m:i%12+1};renderCal()};
+$('#calNext').onclick=()=>{const i=monthIdx(CAL.y,CAL.m)+1;CAL={y:Math.floor(i/12),m:i%12+1};renderCal()};
+$('#calBack').onclick=()=>{if(db.draws[TKEY])renderResult(false);else showHome()};
+$('#calBtnH').onclick=openCal;$('#calOpenR').onclick=openCal;
+for(const id of['calBox','miniCal'])$('#'+id).addEventListener('click',e=>{const c=e.target.closest('.cd.has');if(c)openDaySheet(c.dataset.k)});
 
 /* ========== シェア画像 ========== */
 const SERIF_C='"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif';
