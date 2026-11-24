@@ -74,8 +74,8 @@ h1{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.5;lette
 .secT{font-family:var(--serif);font-size:13px;letter-spacing:.3em;color:var(--gold);text-align:center;margin:8px 0 14px}
 .card{position:relative;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px 18px 16px;margin-bottom:12px;overflow:hidden;
   opacity:0;transform:translateY(14px) scale(.98)}
-.card.show{animation:pop .6s cubic-bezier(.2,1.4,.4,1) forwards}
-@keyframes pop{to{opacity:1;transform:none}}
+.card.show{opacity:1;transform:none;animation:pop .6s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 .card.r1{border-color:rgba(255,230,160,.7);background:linear-gradient(160deg,rgba(255,220,130,.16),rgba(140,90,210,.12));box-shadow:0 0 40px rgba(232,200,114,.18)}
 .card.r1::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);transform:translateX(-100%);animation:shine 2.8s ease 2.4s infinite}
 @keyframes shine{40%,100%{transform:translateX(100%)}}
@@ -102,7 +102,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.5;lette
 .pct{position:absolute;right:16px;top:16px;text-align:right;font-size:11px;color:var(--mute)}
 .pct b{display:block;font-family:var(--serif);font-size:20px;color:var(--ink)}
 .total{border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;text-align:center;opacity:0}
-.total.show{animation:pop .6s ease forwards}
+.total.show{opacity:1;animation:pop .6s ease forwards}
 .total .big{font-family:var(--serif);font-size:30px;margin:4px 0}
 .total .big em{font-style:normal;color:var(--gold)}
 .meter{height:8px;border-radius:8px;background:rgba(255,255,255,.07);margin-top:12px;position:relative;overflow:hidden}
@@ -1147,7 +1147,8 @@ function renderResult(animate){
   const cards=[...document.querySelectorAll('#top3 .card')],tot=$('#total');
   const delays=animate?[1.5,0.8,0.15]:[0,0,0];
   cards.forEach((el,i)=>setTimeout(()=>el.classList.add('show'),delays[i]*1000));
-  setTimeout(()=>{tot.classList.add('show');tot.querySelector('.meter i').style.width=Math.max(4,(1-ev.totalPct)*100)+'%'},(animate?2.4:0.1)*1000);
+  if(!animate)tot.classList.add('show');
+  setTimeout(()=>{tot.classList.add('show');const mi=tot.querySelector('.meter i');if(mi)mi.style.width=Math.max(4,(1-ev.totalPct)*100)+'%'},(animate?2.4:0.1)*1000);
 }
 document.addEventListener('click',e=>{const t=e.target.closest('.tap');if(t&&EV)openSheet(EV.rows[+t.dataset.i],+t.dataset.i)});
 
