@@ -1278,17 +1278,17 @@ for(const id of['calBox','miniCal'])$('#'+id).addEventListener('click',e=>{const
 /* ========== 瞬間占い ==========
    1時間ごとに引ける、文字だけのミニゲーム。結果は先に保存してから見せる（見てからのやり直しはできない）。
    キープした結果は、今日の土台の中でいちばん点の低い占いと入れ替わり、総合が計算し直される（入れ替えは取り消せない）。 */
-const MOMENT_K=1,MAX_KEEP=3,COOL_MS=3600e3;
+const MOMENT_K=1,MAX_KEEP=3,COOL_MS=0;   // クールダウン(ミリ秒)。テスト中は0。本番は 3600e3（1時間）
 const GOD_P=1/16384,GOD_GPY=30.8/1000;                 // 神スロ：1Gでの確率／1円あたりのG数
 const LOTTO_P=1/2e7,LOTTO_PRICE=300,LOTTO_PRIZE=7e8;    // 宝くじ：1等の確率・1枚の値段・1等の賞金
 const POKER=[['ロイヤルストレートフラッシュ',4],['ストレートフラッシュ',36],['フォーカード',624],['フルハウス',3744],['フラッシュ',5108],['ストレート',10200],['スリーカード',54912],['ツーペア',123552],['ワンペア',1098240],['ブタ',1302540]];
 const POKER_TOT=2598960;
-const MGAME={god:'神スロ',lotto:'宝くじ',card:'伏せカード'};
+const MGAME={god:'神スロ',lotto:'宝くじ',card:'伏せカード',gacha:'ガチャ',coin:'コイン連続表',boat:'競艇',zoro:'秒ゾロ'};
 function rand53(){const a=new Uint32Array(2);crypto.getRandomValues(a);return(a[0]*2097152+(a[1]>>>11))/9007199254740992}
 // 上位p（小さいほど珍しい）→ 点数。占い1個ぶんの点（30〜100）にそろえる
 // ゲームごとの点数の曲線 [最低点, 最高点, 曲がり具合]。階級は運の珍しさ(上位%)で決まり、点数だけがゲームごとに違う
-const MCURVE={god:[38,76,.5],lotto:[30,100,.32],card:[34,95,.4]};
-const MTYPE={god:'安定型',lotto:'一撃型',card:'中間型'};
+const MCURVE={god:[38,76,.5],lotto:[30,100,.32],card:[34,95,.4],gacha:[30,100,.32],coin:[34,95,.4],boat:[34,95,.4],zoro:[30,100,.32]};
+const MTYPE={god:'安定型',lotto:'一撃型',card:'中間型',gacha:'一撃型',coin:'中間型',boat:'中間型',zoro:'一撃型'};
 const mScore=(p,t)=>{const[lo,hi,a]=MCURVE[t];return Math.round((lo+(hi-lo)*(1-Math.pow(Math.min(1,Math.max(0,p)),a)))*10)/10};
 function fmtYen(y){
   if(y>=1e12)return'約'+(+(y/1e12).toPrecision(3))+'兆円';
@@ -1317,6 +1317,22 @@ const cardTxt=c=>'♠♥♦♣'[Math.floor(c/13)]+RANKS[c%13];
 const cardRed=c=>{const k=Math.floor(c/13);return k===1||k===2};
 function shuffle52(){const a=[...Array(52).keys()];for(let i=51;i>0;i--){const j=Math.floor(rand53()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
+// ガチャ：最高レア0.7%・天井300連の架空ガチャ。最高レアが出るまでの連数（天井で打ち止め）
+const GACHA_P=.007,GACHA_CAP=300;
+const gachaF=n=>n<=0?0:n>=GACHA_CAP?1:-Math.expm1(n*Math.log1p(-GACHA_P));
+const gachaQ=n=>Math.exp((n-1)*Math.log1p(-GACHA_P));
+const gachaSample=u=>Math.min(GACHA_CAP,Math.max(1,Math.ceil(Math.log1p(-u)/Math.log1p(-GACHA_P)-1e-9)));
+// コイン連続表：表が何回続いてから裏が出るか。k回以上続く確率は 1/2^k
+const coinSample=u=>Math.min(60,Math.floor(-Math.log2(Math.max(u,1e-18))));
+// 競艇：架空の6艇（1号艇が有利）で、1着・2着・3着の並び(3連単)を引く
+const BOAT_W=[55,15,12,9,6,3];
+function boatProb(o){let rest=100,pr=1;for(const b of o){pr*=BOAT_W[b-1]/rest;rest-=BOAT_W[b-1]}return pr}
+let BOAT_ALL=null;
+function boatAll(){if(!BOAT_ALL){BOAT_ALL=[];for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&b!==c&&a!==c)BOAT_ALL.push({o:[a,b,c],p:boatProb([a,b,c])})}return BOAT_ALL}
+function boatDraw(){const left=[1,2,3,4,5,6],o=[];for(let k=0;k<3;k++){const tot=left.reduce((a,b)=>a+BOAT_W[b-1],0);let u=rand53()*tot,i=0;while(i<left.length-1&&u>=BOAT_W[left[i]-1]){u-=BOAT_W[left[i]-1];i++}o.push(left[i]);left.splice(i,1)}return o}
+// 秒ゾロ：押した瞬間の「秒＋ミリ秒」の5桁（例 07.777）の並び。数字くじ占いと同じ採点
+let ZORO_DIST=null;
+function zoroDist(){if(!ZORO_DIST){const a=[];for(let ss=0;ss<60;ss++)for(let ms=0;ms<1000;ms++){const d=(pad(ss)+String(ms).padStart(3,'0')).split('').map(Number);a.push([numberScore(d).s,1/60000])}ZORO_DIST=mkDist(a)}return ZORO_DIST}
 // 結果をつくる（p＝その結果かそれ以上が出る確率、q＝その結果かそれ以下が出る確率）
 function mkMoment(t,x){
   let p,q,r,h,b,one=false,pm=null;
@@ -1330,6 +1346,25 @@ function mkMoment(t,x){
     const pay=n*LOTTO_PRICE;r=`${n.toLocaleString()}枚目で1等が当たり`;
     h=`総投資 ${fmtYen(pay)} → 1等 7億円。収支は${LOTTO_PRIZE>=pay?'+':'−'}${fmtYen(Math.abs(LOTTO_PRIZE-pay))}`;
     b=`1等は約2000万分の1。${n.toLocaleString()}枚以内に当たる確率は ${fmtP(p)}`;
+  }else if(t==='gacha'){
+    const n=x.n;p=gachaF(n);q=gachaQ(n);pm=(gachaF(n)+gachaF(n-1))/2;one=n===1;
+    r=n>=GACHA_CAP?`${n}連目、天井で最高レア`:`${n}連目で最高レア`;
+    h=`最高レア0.7%・天井300連の架空ガチャ`;b=`${n}連以内に最高レアが出る確率は ${fmtP(p)}`;
+  }else if(t==='coin'){
+    const k=x.k;p=Math.pow(2,-k);q=1-Math.pow(2,-(k+1));pm=.75*p;one=k>=20;
+    r=k===0?'1枚目から裏':`表が${k}回連続`;h=k<=14?'表'.repeat(k)+'裏':`表×${k} → 裏`;b=`${k}回以上続く確率は ${fmtP(p)}（1/2を${k}回）`;
+  }else if(t==='boat'){
+    const pr=boatProb(x.order);let up=0,lo=0,lt=0;
+    boatAll().forEach(e=>{if(e.p<=pr*(1+1e-9))up+=e.p;if(e.p>=pr*(1-1e-9))lo+=e.p;if(e.p<pr*(1-1e-9))lt+=e.p});
+    p=up;q=lo;pm=lt+(up-lt)/2;one=false;
+    const pay=Math.max(100,Math.floor(100*.75/pr/10)*10);
+    r=`3連単 ${x.order.join('-')}`;h=`払戻 ${pay.toLocaleString()}円（100円あたり）${pay>=10000?'・万舟':''}`;
+    b=`架空の6艇のレース（1号艇が有利）。この目かそれより出にくい目になる確率は ${fmtP(p)}`;
+  }else if(t==='zoro'){
+    const d=new Date(x.ts),ss=d.getSeconds(),ms=d.getMilliseconds(),digs=(pad(ss)+String(ms).padStart(3,'0')).split('').map(Number),sc=numberScore(digs).s,dist=zoroDist();
+    p=topPct(dist,sc);q=lowPct(dist,sc);const eq=(dist.find(e=>Math.abs(e[0]-sc)<1e-9)||[0,0])[1];pm=p-eq/2;one=sc>=98;
+    r=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(ss)}.${String(ms).padStart(3,'0')}`;
+    h=numberScore(digs).h;b=`押した瞬間の「秒＋ミリ秒」${pad(ss)}${String(ms).padStart(3,'0')}の並びです。この並びかそれ以上になる確率は ${fmtP(p)}`;
   }else{
     const hand=x.hand,i=pokerRank(hand);
     let up=0,lo=0;POKER.forEach(([,c],k)=>{if(k<=i)up+=c;if(k>=i)lo+=c});
@@ -1395,15 +1430,21 @@ function renderMoment(){
   if(m&&m.phase==='decide')return renderDecide(el,m);
   renderMenu(el);
 }
+const MLIST=[
+ {t:'god',name:'神スロ',feel:'毎回そこそこ／上限76点',desc:'GOD揃い（1/16384）を2回引くまで何Gかかるか。少ないほど幸運。1Gで連続2回なら最上輪廻級。'},
+ {t:'lotto',name:'宝くじ',feel:'ほぼハズレ／当たれば最大100点',desc:'1等（約2000万分の1）が当たるまで何枚買うか。総投資と収支つき。1枚目で当たれば天上天下。'},
+ {t:'gacha',name:'ガチャ',feel:'ほぼハズレ／当たれば最大100点',desc:'最高レア0.7%・天井300連の架空ガチャ。何連目で出るか。天井まで行くと救済つきでも低評価。'},
+ {t:'card',name:'伏せカード',feel:'ほどほど／最大95点',desc:'伏せた52枚から直感で5枚を選び、ポーカーの役を見る。ロイヤルストレートフラッシュは約65万分の1。'},
+ {t:'coin',name:'コイン連続表',feel:'ほどほど／最大95点',desc:'コインを投げて、表が何回続くか。n回連続は2のn乗分の1。10連続で極大吉。'},
+ {t:'boat',name:'競艇',feel:'ほどほど／最大95点',desc:'架空の6艇（1号艇有利）の3連単。出にくい目ほど高評価で、払戻（万舟など）も出る。'},
+ {t:'zoro',name:'秒ゾロ',feel:'ほぼハズレ／当たれば最大100点',desc:'押した瞬間の秒とミリ秒の5桁（例 07.777）の並び。ぞろ目や連番、7が多いほど幸運。狙っても当てられない。'}];
 function renderMenu(el){
   const k=keepCount(),left=coolLeft(),ms=todayMoments();
   el.innerHTML=`
     <div class="mc-h"><span>今日のキープ</span><span><b>${k}</b> / ${MAX_KEEP}</span></div>
-    <p class="lead">1時間ごとに1回、占えます。結果を見てから「キープ」か「見送り」を選びます。キープは${MAX_KEEP}つまで、入れ替えはできません。中吉くらいで枠を使うか、もっと良いものを待つか。</p>
+    <p class="lead">${COOL_MS?'1時間ごとに1回、':'（テスト中）何回でも'}占えます。結果を見てから「キープ」か「見送り」を選びます。キープは${MAX_KEEP}つまで、入れ替えはできません。中吉くらいで枠を使うか、もっと良いものを待つか。</p>
     <div class="mc-note mcd" style="font-size:14px;color:var(--gold)"></div>
-    <button class="mgame" data-t="god" ${left?'disabled':''}><b>神スロ</b><small>【安定型・毎回そこそこ／上限76点】GOD揃い（1/16384）を2回引くまで何Gかかるか。少ないほど幸運。1Gで連続2回なら最上輪廻級。</small></button>
-    <button class="mgame" data-t="lotto" ${left?'disabled':''}><b>宝くじ</b><small>【一撃型・ほぼハズレ／当たれば最大100点】1等（約2000万分の1）が当たるまで何枚買うか。総投資と収支つき。1枚目で当たれば天上天下。</small></button>
-    <button class="mgame" data-t="card" ${left?'disabled':''}><b>伏せカード</b><small>【中間型・ほどほど／最大95点】伏せた52枚から直感で5枚を選び、ポーカーの役を見る。ロイヤルストレートフラッシュは約65万分の1。</small></button>
+    ${MLIST.map(g=>`<button class="mgame" data-t="${g.t}" ${left?'disabled':''}><b>${g.name}</b><small>【${MTYPE[g.t]}・${g.feel}】${g.desc}</small></button>`).join('')}
     ${ms.length?`<div class="mlist" style="margin-top:16px">${ms.map(m=>`<div class="mli"><span class="tag${m.kept?' k':''}">${m.kept?'キープ':'見送り'}</span><div>${MGAME[m.t]}　${esc(m.r)}${m.one?' ★一発引き':''}</div><b class="grade g-${m.g}">${m.g}</b></div>`).join('')}</div>`:''}
     <button class="btn ghost" id="momentBack">結果にもどる</button>`;
   tickMoment();
@@ -1411,9 +1452,11 @@ function renderMenu(el){
 function startMoment(t){
   if(coolLeft()>0||pendingM())return;
   const m={day:TKEY,t,at:Date.now()};
-  if(t==='god')m.res=mkMoment('god',{n:godSample(rand53())}),m.phase='decide';
-  else if(t==='lotto')m.res=mkMoment('lotto',{n:lottoSample(rand53())}),m.phase='decide';
-  else m.deck=shuffle52(),m.picks=[],m.phase='pick';
+  if(t==='card')m.deck=shuffle52(),m.picks=[],m.phase='pick';
+  else{
+    const x=t==='god'?{n:godSample(rand53())}:t==='lotto'?{n:lottoSample(rand53())}:t==='gacha'?{n:gachaSample(rand53())}:t==='coin'?{k:coinSample(rand53())}:t==='boat'?{order:boatDraw()}:{ts:Date.now()};
+    m.res=mkMoment(t,x);m.phase='decide';
+  }
   db.moment=m;db.mAt=m.at;persist();renderMoment();
 }
 function renderPick(el,m){
@@ -1441,8 +1484,9 @@ function previewHTML(res){
     :`キープすると、${kept.length?'次に':''}いちばん低い「${worst.f.name}」（${worst.r.s.toFixed(1)}点）と入れ替わります。<br>総合 <span class="arrow">${ev.tg}（${cur.lab}${cur.val}）→ <b>${f.g}（${nx.lab}${nx.val}）</b></span>`}</div>`;
 }
 let _numAnim=0;
+const ANIMTXT={god:n=>`GOD揃いを2回引くまで ${n.toLocaleString()}G`,lotto:n=>`${n.toLocaleString()}枚目で1等が当たり`,gacha:n=>`${n}連目で最高レア`};
 function renderDecide(el,m){
-  const res=m.res,v=mpv(res),full=keepCount()>=MAX_KEEP,animate=!m.seen&&res.t!=='card';
+  const res=m.res,v=mpv(res),full=keepCount()>=MAX_KEEP,animate=!m.seen&&!!ANIMTXT[res.t];
   const longCls=res.g.length>=6?' gl':'';
   el.innerHTML=`<div class="mres"><div class="gname">${MGAME[res.t]}</div>
     <div class="grade g-${res.g}${longCls}" id="mGrade">${animate?'…':res.g}</div>
@@ -1453,10 +1497,10 @@ function renderDecide(el,m){
     ${res.one?'<div class="one">★ 一発引き</div>':''}</div>
     <div id="mPrev">${previewHTML(res)}</div>
     <div class="mbtns"><button class="btn" id="mKeep" ${full||animate?'disabled':''}>キープする</button><button class="btn ghost" id="mSkip" ${animate?'disabled':''}>見送る</button></div>
-    <p class="mc-note" style="text-align:center">キープしても見送っても、つぎの瞬間占いは1時間後です。</p>`;
+    <p class="mc-note" style="text-align:center">${COOL_MS?'キープしても見送っても、つぎの瞬間占いは1時間後です。':'（テスト中は、すぐに次を占えます）'}</p>`;
   if(animate){
     m.seen=true;persist();
-    const target=res.n,id=++_numAnim,t0=performance.now(),dur=1300,txt=n=>res.t==='god'?`GOD揃いを2回引くまで ${n.toLocaleString()}G`:`${n.toLocaleString()}枚目で1等が当たり`;
+    const target=res.n,id=++_numAnim,t0=performance.now(),dur=1300,txt=ANIMTXT[res.t];
     const step=now=>{
       if(id!==_numAnim||!$('#mrText'))return;
       const x=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-x,3),n=Math.max(1,Math.round(target*e));
