@@ -103,6 +103,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.5;lette
 .pct b{display:block;font-family:var(--serif);font-size:20px;color:var(--ink)}
 .total{border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;text-align:center;opacity:0}
 .total.show{opacity:1;animation:pop .6s ease forwards}
+.total.now,.card.now{opacity:1;transform:none;animation:none}
 .total .big{font-family:var(--serif);font-size:30px;margin:4px 0}
 .total .big em{font-style:normal;color:var(--gold)}
 .meter{height:8px;border-radius:8px;background:rgba(255,255,255,.07);margin-top:12px;position:relative;overflow:hidden}
@@ -1146,9 +1147,9 @@ function renderResult(animate){
   // 3位→2位→1位の順に出す
   const cards=[...document.querySelectorAll('#top3 .card')],tot=$('#total');
   const delays=animate?[1.5,0.8,0.15]:[0,0,0];
-  cards.forEach((el,i)=>setTimeout(()=>el.classList.add('show'),delays[i]*1000));
-  if(!animate)tot.classList.add('show');
-  setTimeout(()=>{tot.classList.add('show');const mi=tot.querySelector('.meter i');if(mi)mi.style.width=Math.max(4,(1-ev.totalPct)*100)+'%'},(animate?2.4:0.1)*1000);
+  cards.forEach((el,i)=>{if(animate)setTimeout(()=>el.classList.add('show'),delays[i]*1000);else el.classList.add('now')});
+  tot.classList.remove('show','now');if(!animate)tot.classList.add('now');
+  setTimeout(()=>{if(animate)tot.classList.add('show');const mi=tot.querySelector('.meter i');if(mi)mi.style.width=Math.max(4,(1-ev.totalPct)*100)+'%'},(animate?2.4:0.1)*1000);
 }
 document.addEventListener('click',e=>{const t=e.target.closest('.tap');if(t&&EV)openSheet(EV.rows[+t.dataset.i],+t.dataset.i)});
 
