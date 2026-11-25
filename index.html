@@ -192,6 +192,16 @@ details[open] summary::after{content:"－"}
 .cd.today{outline:1.5px solid var(--gold);outline-offset:1px}
 .cd.future{opacity:.3}
 .cd.best::after{content:"★";position:absolute;top:1px;right:3px;font-size:10px}
+/* 階級図鑑 */
+.dxh{text-align:center;font-size:12px;color:var(--mute);line-height:2}
+.dxh b{font-family:var(--serif);font-size:22px;color:var(--gold);margin:0 4px}
+.dxr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 4px;border-top:1px solid rgba(255,255,255,.06)}
+.dxr .dxn b.grade{font-size:18px;margin:0;letter-spacing:.06em}
+.dxr .dxn small{display:block;color:var(--dim);font-size:10px;margin-top:2px}
+.dxr .dxq{font-family:var(--serif);font-size:16px;color:var(--dim);letter-spacing:.2em}
+.dxr .dxc{display:grid;gap:3px;text-align:right;font-size:10px;color:var(--dim)}
+.dxr .dxc span.on{color:var(--gold)}
+.dxnew{margin-top:8px;font-size:12px;color:var(--gold)}
 /* 瞬間占い */
 .mcard{border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 18px;background:rgba(255,255,255,.03)}
 .mc-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mute)}
@@ -276,6 +286,7 @@ details[open] summary::after{content:"－"}
     <div class="tags" id="tags"></div>
     <button class="btn" id="drawBtn">占う</button>
     <button class="btn ghost" id="calBtnH" style="margin-top:12px">運勢カレンダーを見る</button>
+    <button class="btn ghost" id="dexBtnH" style="margin-top:10px">階級図鑑を見る</button>
     <p class="foot" id="homeStreak"></p>
     <p class="foot">1日1回。結果は今日の終わりまで変わりません。</p>
     <button class="linkBtn" id="resetLinkH">リセット</button>
@@ -289,6 +300,13 @@ details[open] summary::after{content:"－"}
     <div class="calSum" id="calSum"></div>
     <div class="calLegend" id="calLegend"></div>
     <button class="btn ghost" id="calBack">もどる</button>
+  </section>
+
+  <!-- 階級図鑑 -->
+  <section id="dex" class="screen">
+    <div class="secT">階級図鑑</div>
+    <div id="dexBody"></div>
+    <button class="btn ghost" id="dexBack">もどる</button>
   </section>
 
   <!-- 瞬間占い -->
@@ -307,6 +325,7 @@ details[open] summary::after{content:"－"}
     <div class="secT" style="margin-top:26px">今月の運勢カレンダー</div>
     <div id="miniCal"></div>
     <button class="calOpen" id="calOpenR">月ごとにくわしく見る ›</button>
+    <button class="calOpen" id="dexOpenR" style="margin-top:14px">階級図鑑 ›</button>
     <button class="btn" id="shareBtn" style="margin-top:18px">結果を画像でシェア</button>
     <details id="allBox"><summary>すべての占い結果（タップで詳しく）</summary><div class="list" id="allList"></div></details>
     <details id="howBox"><summary>しくみと乱数表</summary>
@@ -1114,6 +1133,8 @@ function renderResult(animate){
   const ev=EV=applyMoments(evaluate(profileObj(),today,d.table,{avoid,picks:d.picks}),d.moments);
   if(!d.picks){d.picks=Object.fromEntries(ev.rows.map(x=>[x.f.id,x.rd.picks]));d.shown=shownKeys(ev.rows);persist()}
   d.sum=makeSum(ev);persist();
+  {const nw=[];if(dexAdd('tot',ev.tg,'総合',TKEY,true))nw.push(ev.tg);ev.rows.forEach(x=>dexAdd('any',x.g,x.f.name,TKEY,true));
+   if(nw.length){d.dexNew=[...new Set([...(d.dexNew||[]),...nw])];persist()}}
   {const st=streak();$('#resDate').textContent=fmtDate(today)+(st>1?`　🔥${st}日連続`:'')}
   const top=ev.rows.slice(0,3);
   $('#top3').innerHTML=top.map((x,i)=>`
@@ -1134,6 +1155,7 @@ function renderResult(animate){
     <div class="small">全${ev.rows.length}の占いをあわせた今日の運</div>
     <div class="big">${tv.lab} <em>${tv.val}</em> の${tv.lab==='上位'?'幸運日':'厄日'}</div>
     ${ev.kept?`<div class="small">土台の運 ${(b=>b.lab+' '+b.val)(pv(ev.base.totalPct,ev.base.totalLo,ev.base.tg))}（${ev.base.tg}）→ 瞬間占い${ev.kept}件キープで <b style="color:var(--gold)">${tg}</b></div>`:''}
+    ${d.dexNew&&d.dexNew.length?`<div class="dxnew">🆕 階級図鑑に初登録：${d.dexNew.join('、')}</div>`:''}
     <div class="small">総合ランク「${tg}」／ 上位10%以内の占いが <b style="color:var(--gold)">${ev.good}個</b></div>
     <div class="meter"><i></i></div>
     <div class="cats">${ev.cats.map(k=>`<div class="tap" data-i="${ev.rows.indexOf(k.best)}"><span>${CAT_ICON[k.c]} ${k.c}運</span><b>${'★'.repeat(k.st)}<s>${'★'.repeat(5-k.st)}</s></b><small>決め手：${k.best.f.name}</small></div>`).join('')}</div>
@@ -1486,6 +1508,7 @@ function previewHTML(res){
 let _numAnim=0;
 const ANIMTXT={god:n=>`GOD揃いを2回引くまで ${n.toLocaleString()}G`,lotto:n=>`${n.toLocaleString()}枚目で1等が当たり`,gacha:n=>`${n}連目で最高レア`};
 function renderDecide(el,m){
+  if(!m.dexed){m.newDex=dexAdd('any',m.res.g,MGAME[m.res.t],TKEY,false);m.dexed=true;persist()}
   const res=m.res,v=mpv(res),full=keepCount()>=MAX_KEEP,animate=!m.seen&&!!ANIMTXT[res.t];
   const longCls=res.g.length>=6?' gl':'';
   el.innerHTML=`<div class="mres"><div class="gname">${MGAME[res.t]}</div>
@@ -1494,7 +1517,7 @@ function renderDecide(el,m){
     <div class="mr" id="mrText">${esc(res.r)}</div>
     ${res.t==='card'?`<div class="hand">${res.hand.map(c=>`<span class="${cardRed(c)?'r':''}">${cardTxt(c)}</span>`).join('')}</div>`:`<div class="mh">${esc(res.h)}</div>`}
     <div class="mh">${esc(res.b)}</div>
-    ${res.one?'<div class="one">★ 一発引き</div>':''}</div>
+    ${res.one?'<div class="one">★ 一発引き</div>':''}${m.newDex?`<div class="dxnew">🆕 階級図鑑に初登録：${res.g}</div>`:''}</div>
     <div id="mPrev">${previewHTML(res)}</div>
     <div class="mbtns"><button class="btn" id="mKeep" ${full||animate?'disabled':''}>キープする</button><button class="btn ghost" id="mSkip" ${animate?'disabled':''}>見送る</button></div>
     <p class="mc-note" style="text-align:center">${COOL_MS?'キープしても見送っても、つぎの瞬間占いは1時間後です。':'（テスト中は、すぐに次を占えます）'}</p>`;
@@ -1526,6 +1549,50 @@ $('#momentBody').addEventListener('click',e=>{
   if(e.target.closest('#momentBack'))return renderResult(false);
 });
 $('#momentCard').addEventListener('click',e=>{if(e.target.closest('#momentBtn'))openMoment()});
+
+
+/* ========== 階級図鑑 ==========
+   出た階級を記録する。tot＝その日の総合、any＝各占い・瞬間占いの結果。
+   d＝初めて出た日、s＝そのとき出した占い、c＝出た回数（総合は日数）。 */
+db.dex=db.dex||{tot:{},any:{}};
+// 記録して、その階級が図鑑に初登録ならtrueを返す。once=trueは同じ日の同じ記録を1回だけ数える
+function dexAdd(kind,tier,src,day,once){
+  if(!GRADES.includes(tier))return false;
+  if(once){const d=db.draws[day];if(d){d.dexSeen=d.dexSeen||[];const k=kind+':'+tier+':'+src;if(d.dexSeen.includes(k))return false;d.dexSeen.push(k)}}
+  const m=db.dex[kind],e=m[tier];
+  if(e){e.c++;if(day<e.d){e.d=day;e.s=src}persist();return false}
+  m[tier]={d:day,s:src,c:1};persist();return true;
+}
+// 今までの記録(保存済みの要約・瞬間占い)から、図鑑を最初に1回だけ作る
+function dexMigrate(){
+  if(db.dexV===1)return;
+  for(const k of Object.keys(db.draws).sort()){
+    const d=db.draws[k],sm=d.sum;
+    if(sm){dexAdd('tot',sm.g,'総合',k,true);(sm.top||[]).forEach(t=>dexAdd('any',t.g,t.n,k,true))}
+    (d.moments||[]).forEach(m=>dexAdd('any',m.g,MGAME[m.t]||'瞬間占い',k,false));
+  }
+  db.dexV=1;persist();
+}
+dexMigrate();
+function dexCond(g){
+  const e=LADDER.find(x=>x[0]===g);
+  if(e[1]===1)return'ふつうの日の下のほう';
+  return e[2]==='u'?`上位${fmtP(e[1])}以内`:`下位${fmtP(e[1])}以内`;
+}
+function openDex(){show('dex');window.scrollTo(0,0);renderDex()}
+function renderDex(){
+  const T=db.dex.tot,A=db.dex.any,got=g=>T[g]||A[g];
+  const nT=GRADES.filter(g=>T[g]).length,nA=GRADES.filter(g=>A[g]).length,nAll=GRADES.filter(got).length;
+  const fmt=e=>e?`${e.d.slice(5).replace('-','/')}${e.s?' '+esc(e.s):''} ×${e.c}`:'—';
+  $('#dexBody').innerHTML=`
+    <div class="dxh">集めた階級<b>${nAll}</b>/ ${GRADES.length}<br>総合で <b style="font-size:16px">${nT}</b> ／ 占い・瞬間占いで <b style="font-size:16px">${nA}</b></div>
+    ${GRADES.map(g=>{const t=T[g],a=A[g],has=t||a;
+      return`<div class="dxr"><div class="dxn">${has?`<b class="grade g-${g}">${g}</b>`:'<span class="dxq">？？？</span>'}<small>${dexCond(g)}</small></div>
+        <div class="dxc"><span class="${t?'on':''}">総合 ${fmt(t)}</span><span class="${a?'on':''}">占い ${fmt(a)}</span></div></div>`}).join('')}
+    <p class="sh-note">総合は「その日の総合の階級」、占いは各占いと瞬間占いの結果の階級です。左の「？？？」は、まだ一度も出ていない階級です。</p>`;
+}
+$('#dexBtnH').onclick=openDex;$('#dexOpenR').onclick=openDex;
+$('#dexBack').onclick=()=>{if(db.draws[TKEY])renderResult(false);else showHome()};
 
 /* ========== シェア画像 ========== */
 const SERIF_C='"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif';
